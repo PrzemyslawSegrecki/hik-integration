@@ -1,0 +1,16 @@
+# Dashboard view: shows the doorbell UI only while someone is ringing or talking.
+# Replace BACKEND_URL and APP_TOKEN.
+title: Domofon
+path: domofon
+icon: mdi:doorbell-video
+panel: true
+cards:
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: sensor.domofon_stan_rozmowy
+        state_not: idle
+    card:
+      type: iframe
+      url: BACKEND_URL/?overlay=1&token=APP_TOKEN
+      aspect_ratio: 56%

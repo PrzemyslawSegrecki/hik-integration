@@ -1,0 +1,24 @@
+# go2rtc config for the bundled service (docker compose --profile go2rtc).
+# Values in ${...} are taken from .env.
+#
+# With the bundled go2rtc set in .env:
+#   GO2RTC_URL=http://go2rtc:1984
+#   GO2RTC_STREAM_NAME=doorbell
+#   DOCKER_HOST_IP=<LAN IP of the machine running Docker>
+
+streams:
+  doorbell:
+    # Video + audio from the doorbell
+    - rtsp://${HIK_USERNAME}:${HIK_PASSWORD}@${HIK_IP}:554/Streaming/Channels/101
+    # Two-way audio (talking back to the doorbell) via Hikvision ISAPI
+    - isapi://${HIK_USERNAME}:${HIK_PASSWORD}@${HIK_IP}:80/
+
+api:
+  listen: ":1984"
+
+webrtc:
+  listen: ":8555"
+  candidates:
+    # Browsers connect to this address for media. Must be reachable from your devices.
+    - ${DOCKER_HOST_IP}:8555
+    - stun:8555

@@ -1,0 +1,30 @@
+# Quick start:
+#   cp .env.example .env        # fill in HIK_* and APP_* values
+#   docker compose up -d                      # app only (you already run go2rtc)
+#   docker compose --profile go2rtc up -d     # app + bundled go2rtc
+#
+# To use the prebuilt image instead of building locally, set HIK_DOORBELL_IMAGE in .env
+# (e.g. ghcr.io/przemyslawsegrecki/hik-integration:latest) and run `docker compose pull` first.
+
+services:
+  hik-doorbell:
+    image: ${HIK_DOORBELL_IMAGE:-hik-doorbell:local}
+    build: .
+    container_name: hik-doorbell
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PORT:-8090}:${PORT:-8090}"
+
+  go2rtc:
+    profiles: ["go2rtc"]
+    image: alexxit/go2rtc:1.9.9
+    container_name: hik-go2rtc
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "1984:1984"        # API (only the app needs it; do not expose to the internet)
+      - "8555:8555/tcp"    # WebRTC media
+      - "8555:8555/udp"
+    volumes:
+      - ./go2rtc.yaml:/config/go2rtc.yaml:ro

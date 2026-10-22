@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hik Doorbell - ustawienia</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1115;
+        --panel: #181b22;
+        --border: #2a2f3a;
+        --text: #e8eaef;
+        --muted: #9aa1ae;
+        --accent: #22d3ee;
+        --ok: #34d399;
+        --err: #f87171;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+      }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      p.lead { margin: 0 0 20px; color: var(--muted); }
+      label { display: block; font-weight: 600; margin: 14px 0 6px; }
+      .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+      input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 9px 11px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        font: inherit;
+      }
+      input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+      .check { display: flex; gap: 8px; align-items: center; margin-top: 18px; font-weight: 400; }
+      .actions { display: flex; gap: 10px; margin-top: 24px; }
+      button {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #04232a; }
+      button:disabled { opacity: 0.5; cursor: default; }
+      #status { min-height: 21px; margin-top: 16px; }
+      #status.ok { color: var(--ok); }
+      #status.err { color: var(--err); }
+    </style>
+  </head>
+  <body>
+    <h1>Połączenie z serwerem domofonu</h1>
+    <p class="lead">Klient działa w zasobniku i pokazuje okno, gdy ktoś dzwoni.</p>
+
+    <form id="form">
+      <label for="server">Adres serwera</label>
+      <input id="server" type="text" placeholder="https://domofon.example.com" autocomplete="off" required />
+      <div class="hint">Ten sam adres, pod którym otwierasz aplikację w przeglądarce.</div>
+
+      <label for="token">Token</label>
+      <input id="token" type="password" autocomplete="off" required />
+      <div class="hint">Wartość <code>APP_TOKEN</code> z pliku <code>.env</code> na serwerze.</div>
+
+      <label class="check"><input id="autostart" type="checkbox" /> Uruchamiaj razem z Windows</label>
+
+      <div class="actions">
+        <button id="test" type="button">Testuj połączenie</button>
+        <button id="save" type="submit" class="primary">Zapisz</button>
+      </div>
+      <div id="status"></div>
+    </form>
+
+    <script>
+      const tauri = window.__TAURI__;
+      const invoke = tauri && (tauri.invoke || (tauri.tauri && tauri.tauri.invoke));
+      const $ = (id) => document.getElementById(id);
+      const status = $("status");
+
+      function setStatus(text, kind) {
+        status.textContent = text;
+        status.className = kind || "";
+      }
+
+      function readForm() {
+        return { server_url: $("server").value, token: $("token").value, autostart: $("autostart").checked };
+      }
+
+      async function withBusy(fn) {
+        $("test").disabled = $("save").disabled = true;
+        try {
+          await fn();
+        } catch (error) {
+          setStatus(String(error), "err");
+        } finally {
+          $("test").disabled = $("save").disabled = false;
+        }
+      }
+
+      if (!invoke) {
+        setStatus("Ta strona działa tylko w aplikacji Hik Doorbell.", "err");
+      } else {
+        invoke("get_config").then((config) => {
+          $("server").value = config.server_url || "";
+          $("token").value = config.token || "";
+          $("autostart").checked = config.autostart !== false;
+        });
+      }
+
+      $("test").addEventListener("click", () =>
+        withBusy(async () => {
+          setStatus("Łączenie...");
+          setStatus(await invoke("test_connection", { config: readForm() }), "ok");
+        })
+      );
+
+      $("form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        withBusy(async () => {
+          setStatus("Sprawdzanie...");
+          await invoke("test_connection", { config: readForm() });
+          setStatus("Zapisano, uruchamianie ponownie...", "ok");
+          await invoke("save_config", { config: readForm() });
+        });
+      });
+    </script>
+  </body>
+</html>

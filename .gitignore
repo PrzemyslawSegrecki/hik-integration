@@ -1,0 +1,28 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.local
+npm-debug.log*
+apps/server/public/
+*.tsbuildinfo
+
+# Windows client build output
+apps/windows/src-tauri/target/
+
+# Local tooling / personal files
+config.json
+rustup-init.exe
+NUL
+!apps/windows/dist/
+
+# Python
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+
+# Local backups of configuration
+.env.*
+!.env.example
+*.bak-*

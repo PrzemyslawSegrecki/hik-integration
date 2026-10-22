@@ -1,0 +1,169 @@
+<!doctype html>
+
+<html class="dark" lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Wideodomofon - Rozmowa Aktywna</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&amp;family=Space+Grotesk:wght@600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#0ddbf2",
+              accept: "#00FF66",
+              answer: "#16a750",
+              reject: "#FF0055",
+              "background-light": "#f5f8f8",
+              "background-dark": "#050507",
+              surface: "rgba(20, 22, 28, 0.65)",
+            },
+            fontFamily: {
+              display: ["Space Grotesk", "sans-serif"],
+              body: ["Plus Jakarta Sans", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "1.5rem",
+              lg: "1.5rem",
+              xl: "1.5rem",
+              full: "9999px",
+            },
+            boxShadow: {
+              "neon-primary": "0 0 20px rgba(13, 219, 242, 0.4)",
+              "neon-accept": "0 0 20px rgba(0, 255, 102, 0.4)",
+              "neon-answer": "0 0 20px rgba(11, 116, 53, 0.69)",
+              "neon-reject": "0 0 20px rgba(255, 0, 85, 0.4)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .glass-panel {
+        background-color: theme("colors.surface");
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 1,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background-dark text-white font-body h-screen w-screen overflow-hidden selection:bg-primary/30"
+  >
+    <!-- Main Container / Full Bleed Camera Feed -->
+    <main class="relative w-full h-full flex flex-col justify-between">
+      <!-- Simulated Camera Feed Background -->
+      <div class="absolute inset-0 -z-10">
+        <img
+          alt="Front door camera view showing a bright sunny day"
+          class="w-full h-full object-cover"
+          data-alt="Clear front door camera view"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAmu-pFEd8y0x6doMOUWC91rxKp_1XfhjA06BMwErK12SNd9xcltQc5TQ8vN-G_nsmhZRN46B7_T0AWD6g4RaYnKZaS8BzwTFrrZiAPkNyHEHB3o7KlwjN7px6oW73anAYAkYUEDxhFLzw9Z7UsyXjtyMsTgI92hd4vDG-COiDYX7jfsTnBSpXc_mU_ok3IyFY2NhSRJ_87GQ05JmByD7s6wy66K26vBXH1ymHCWY0JZMLkfXfqamvpozRl1a-FD8JE5AUTiuc3y6Z"
+        />
+      </div>
+      <!-- Top Header Status -->
+      <header class="p-6 md:p-8 flex justify-between items-start">
+        <div class="flex gap-3 items-center">
+          <span class="w-2 h-2 rounded-full bg-accept animate-pulse"></span>
+          <h1
+            class="font-display font-bold text-2xl md:text-3xl lg:text-4xl uppercase tracking-widest text-accept drop-shadow-[0_0_10px_rgba(0,255,102,0.5)]"
+          >
+            Rozmowa Aktywna
+          </h1>
+          <div class="flex items-center gap-2"></div>
+        </div>
+        <!-- Menu Button -->
+        <button
+          aria-label="Menu"
+          class="flex shrink-0 items-center justify-center rounded-full w-24 h-24 bg-white/10 hover:bg-white/20 transition-colors border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+        >
+          <span
+            class="material-symbols-outlined text-5xl"
+            data-icon="menu"
+            data-weight="fill"
+            >menu</span
+          >
+        </button>
+      </header>
+      <!-- Bottom Action Bar -->
+      <footer class="w-full p-8 pb-12 flex justify-center items-end">
+        <!-- Controls Container -->
+        <div
+          class="flex items-center gap-6 glass-panel px-5 py-5 rounded-full shadow-2xl"
+        >
+          <button
+            aria-label="Odbierz rozmowę"
+            class="flex shrink-0 items-center justify-center rounded-full w-24 h-24 bg-answer hover:bg-answer/80 hover:shadow-neon-ansewer transition-all text-white border border-transparent focus:outline-none focus:ring-2 focus:ring-reject/50"
+          >
+            <span
+              class="material-symbols-outlined text-5xl"
+              data-icon="call"
+              data-weight="fill"
+              >call</span
+            >
+          </button>
+
+          <button
+            aria-label="Zakończ rozmowę"
+            class="flex shrink-0 items-center justify-center rounded-full w-24 h-24 bg-reject hover:bg-reject/80 hover:shadow-neon-reject transition-all text-white border border-transparent focus:outline-none focus:ring-2 focus:ring-reject/50"
+          >
+            <span
+              class="material-symbols-outlined text-5xl"
+              data-icon="call_end"
+              data-weight="fill"
+              >call_end</span
+            >
+          </button>
+
+          <!-- Open Gate Primary Action -->
+          <button
+            aria-label="Otwórz bramę"
+            class="group relative flex items-center justify-center rounded-full w-24 h-24 bg-primary text-background-dark font-display font-bold text-sm md:text-base uppercase tracking-wider hover:bg-white hover:text-black hover:shadow-neon-primary transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-primary/50 overflow-hidden"
+          >
+            <span
+              class="relative z-10 flex items-center gap-2 group-active:scale-95 transition-transform"
+            >
+              <span class="material-symbols-outlined text-5xl" data-icon="key"
+                >key</span
+              >
+            </span>
+            <!-- Flash effect overlay -->
+            <div
+              class="absolute inset-0 bg-white opacity-0 group-active:opacity-100 transition-opacity duration-150 z-0"
+            ></div>
+          </button>
+          <!-- End Call Button -->
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>

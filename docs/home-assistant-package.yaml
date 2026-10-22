@@ -1,0 +1,73 @@
+# Home Assistant package for hik-doorbell.
+# Copy to /config/packages/hik_doorbell.yaml and enable packages in configuration.yaml:
+#   homeassistant:
+#     packages: !include_dir_named packages
+#
+# Replace BACKEND_URL with the app address (e.g. http://192.168.1.10:8090)
+# and add to secrets.yaml:
+#   hik_doorbell_auth_header: "Bearer <APP_TOKEN>"
+
+rest:
+  - resource: BACKEND_URL/api/state
+    headers:
+      Authorization: !secret hik_doorbell_auth_header
+    scan_interval: 2
+    sensor:
+      - name: Domofon stan rozmowy
+        unique_id: hik_doorbell_call_state
+        value_template: "{{ value_json.callState }}"
+        icon: mdi:doorbell-video
+      - name: Domofon ostatni dzwonek
+        unique_id: hik_doorbell_last_ring
+        value_template: "{{ value_json.lastRingAt }}"
+        device_class: timestamp
+
+rest_command:
+  hik_doorbell_open_door:
+    url: BACKEND_URL/api/actions/open-door
+    method: POST
+    headers:
+      Authorization: !secret hik_doorbell_auth_header
+  hik_doorbell_reject:
+    url: BACKEND_URL/api/actions/reject
+    method: POST
+    headers:
+      Authorization: !secret hik_doorbell_auth_header
+
+script:
+  hik_doorbell_open_door:
+    alias: Domofon - otwórz furtkę
+    icon: mdi:gate-open
+    sequence:
+      - action: rest_command.hik_doorbell_open_door
+
+# Optional: fullscreen popup on every dashboard (requires browser_mod from HACS).
+# Remove this block if you do not use browser_mod.
+automation:
+  - alias: Domofon - popup przy dzwonku
+    id: hik_doorbell_popup_on_ring
+    triggers:
+      - trigger: state
+        entity_id: sensor.domofon_stan_rozmowy
+        to: ringing
+    actions:
+      - action: browser_mod.popup
+        data:
+          title: Domofon
+          dismissable: true
+          size: fullscreen
+          content:
+            type: iframe
+            url: BACKEND_URL/?overlay=1&token=APP_TOKEN
+            aspect_ratio: 56%
+
+  - alias: Domofon - zamknij popup
+    id: hik_doorbell_popup_close
+    triggers:
+      - trigger: state
+        entity_id: sensor.domofon_stan_rozmowy
+        to:
+          - idle
+          - ended
+    actions:
+      - action: browser_mod.close_popup
