@@ -12,11 +12,11 @@
     "@fontsource/plus-jakarta-sans": "^5.3.0",
     "@fontsource/space-grotesk": "^5.3.0",
     "material-symbols": "^0.31.9",
-    "react": "^19.2.0",
+    "react": "^19.3.1",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.2",
+    "@types/react": "^19.3.0",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.6.1",
