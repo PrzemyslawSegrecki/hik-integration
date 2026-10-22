@@ -20,7 +20,7 @@ native-tls = "0.2"
 auto-launch = "0.5"
 anyhow = "1.0"
 chrono = "0.4"
-dirs = "5.0"
+dirs = "7.0"
 
 [features]
 default = ["custom-protocol"]
