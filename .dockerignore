@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log*
+.env
+.git
+.vscode
+apps/server/public
+apps/*/dist
+apps/windows
+docs
+scripts
+*.tsbuildinfo
+**/.venv
+**/__pycache__
+**/.mypy_cache
+**/.pytest_cache
+apps/server/tests

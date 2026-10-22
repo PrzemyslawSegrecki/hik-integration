@@ -1,0 +1,14 @@
+Intelligent Security API (Video Intercom) Developer Guide
+
+Saved from user-provided parsed text on 2026-03-16.
+
+Key extracted points used in this project:
+- /ISAPI/VideoIntercom/callSignal?format=json supports cmdType: request, cancel, answer, reject, bellTimeout, hangUp, deviceOnCall
+- /ISAPI/VideoIntercom/callStatus?format=json returns status: idle, ring, onCall
+- /ISAPI/VideoIntercom/ring supports DELETE to delete all rings
+- /ISAPI/VideoIntercom/ring/ringID/<ID> supports DELETE to delete ring by ID
+- /ISAPI/VideoIntercom/remoteOpenDoor supports remote unlock
+- Response code 400 with subStatusCode invalidOperation means Invalid Operation
+- Error 0x40002068 means: Two-way audio in progress. Please wait.
+
+Original parsed document content was provided in chat and should be treated as the source reference for implementation decisions.

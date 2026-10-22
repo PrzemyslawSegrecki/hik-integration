@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTC Player</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+
+      #video {
+        width: 100%;
+        height: 100%;
+        background: #000;
+      }
+
+      #video::-webkit-media-controls {
+        display: none !important;
+      }
+
+      #overlay {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(0, 0, 0, 0.56);
+        color: #fff;
+        z-index: 2;
+        text-align: center;
+        padding: 1rem;
+      }
+
+      #overlay.hidden {
+        display: none;
+      }
+
+      #start {
+        appearance: none;
+        border: 0;
+        border-radius: 10px;
+        padding: 0.8rem 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 0.75rem;
+      }
+
+      #hint {
+        opacity: 0.88;
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <video id="video" autoplay playsinline></video>
+    <div id="overlay">
+      <div>
+        <div>Uruchom audio i mikrofon</div>
+        <div id="hint">Kliknij, aby wlaczyc glos i rozmowe dwukierunkowa.</div>
+        <button id="start" type="button">Start rozmowy</button>
+      </div>
+    </div>
+
+    <script>
+      const qs = new URLSearchParams(location.search);
+      const go2rtcBase = qs.get("go2rtc") || "/go2rtc";
+      const srcName = qs.get("src") || "doorbell";
+      const media = qs.get("media") || "video+audio+microphone";
+      const autostart = qs.get("autostart") !== "0";
+
+      const overlay = document.getElementById("overlay");
+      const hint = document.getElementById("hint");
+      const button = document.getElementById("start");
+      const video = document.getElementById("video");
+      let started = false;
+
+      const needsMic = media.includes("microphone");
+
+      if (!window.isSecureContext && needsMic) {
+        hint.textContent = "Mikrofon wymaga HTTPS. Wideo i dzwiek odbioru moga dzialac, ale mikrofon nie.";
+      }
+
+      async function getMediaTracks(mediaKind, constraints) {
+        try {
+          const stream =
+            mediaKind === "user"
+              ? await navigator.mediaDevices.getUserMedia(constraints)
+              : await navigator.mediaDevices.getDisplayMedia(constraints);
+          return stream.getTracks();
+        } catch (error) {
+          throw error;
+        }
+      }
+
+      async function buildPeerConnection() {
+        const pc = new RTCPeerConnection({
+          iceServers: [{ urls: ["stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302"] }]
+        });
+
+        const localTracks = [];
+
+        if (/camera|microphone/.test(media)) {
+          const tracks = await getMediaTracks("user", {
+            video: media.includes("camera"),
+            audio: media.includes("microphone")
+          }).catch((error) => {
+            if (media.includes("microphone")) {
+              throw error;
+            }
+            return [];
+          });
+
+          tracks.forEach((track) => {
+            pc.addTransceiver(track, { direction: "sendonly" });
+            if (track.kind === "video") localTracks.push(track);
+          });
+        }
+
+        if (/video|audio/.test(media)) {
+          const tracks = ["video", "audio"]
+            .filter((kind) => media.includes(kind))
+            .map((kind) => pc.addTransceiver(kind, { direction: "recvonly" }).receiver.track);
+          localTracks.push(...tracks);
+        }
+
+        video.srcObject = new MediaStream(localTracks);
+        return pc;
+      }
+
+      function toWsUrl() {
+        // go2rtcBase may be a path on this server (the authenticated /go2rtc proxy) or a full URL.
+        const apiWs = new URL(`${go2rtcBase.replace(/\/$/, "")}/api/ws`, location.href);
+        apiWs.searchParams.set("src", srcName);
+        if (apiWs.protocol === "https:") apiWs.protocol = "wss:";
+        if (apiWs.protocol === "http:") apiWs.protocol = "ws:";
+        return apiWs.toString();
+      }
+
+      async function connect() {
+        if (started) return;
+        started = true;
+
+        const pc = await buildPeerConnection();
+        const ws = new WebSocket(toWsUrl());
+
+        ws.addEventListener("open", async () => {
+          pc.addEventListener("icecandidate", (ev) => {
+            if (!ev.candidate) return;
+            ws.send(JSON.stringify({ type: "webrtc/candidate", value: ev.candidate.candidate }));
+          });
+
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          ws.send(JSON.stringify({ type: "webrtc/offer", value: pc.localDescription.sdp }));
+        });
+
+        ws.addEventListener("message", async (ev) => {
+          const msg = JSON.parse(ev.data);
+          if (msg.type === "webrtc/candidate") {
+            await pc.addIceCandidate({ candidate: msg.value, sdpMid: "0" });
+          }
+          if (msg.type === "webrtc/answer") {
+            await pc.setRemoteDescription({ type: "answer", sdp: msg.value });
+          }
+        });
+      }
+
+      button.addEventListener("click", async () => {
+        overlay.classList.add("hidden");
+        try {
+          await connect();
+        } catch {
+          started = false;
+          overlay.classList.remove("hidden");
+          hint.textContent = "Brak zgody na mikrofon lub urzadzenie jest niedostepne. Sprawdz uprawnienia przegladarki i sprobuj ponownie.";
+          return;
+        }
+
+        try {
+          video.muted = false;
+          await video.play();
+        } catch {
+          video.muted = false;
+        }
+      });
+
+      if (!needsMic) {
+        overlay.classList.add("hidden");
+        connect().then(async () => {
+          try {
+            video.muted = false;
+            await video.play();
+          } catch {
+            video.muted = true;
+            await video.play().catch(() => undefined);
+          }
+        });
+      } else if (autostart) {
+        overlay.classList.add("hidden");
+        connect()
+          .then(async () => {
+            try {
+              video.muted = false;
+              await video.play();
+            } catch {
+              video.muted = true;
+              await video.play().catch(() => undefined);
+            }
+          })
+          .catch(() => {
+            started = false;
+            overlay.classList.remove("hidden");
+            hint.textContent = "Kliknij, aby zezwolic na mikrofon i uruchomic rozmowe.";
+          });
+      }
+    </script>
+  </body>
+</html>
