@@ -8,14 +8,14 @@ RUN npm ci
 COPY apps/web apps/web
 RUN npm run build
 
-FROM python:3.13-alpine AS deps
+FROM python:3.15-alpine AS deps
 COPY --from=ghcr.io/astral-sh/uv:0.11.31 /uv /bin/uv
 WORKDIR /app/apps/server
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
 COPY apps/server/pyproject.toml apps/server/uv.lock ./
 RUN uv sync --frozen --no-dev
 
-FROM python:3.13-alpine AS runtime
+FROM python:3.15-alpine AS runtime
 WORKDIR /app/apps/server
 ENV PATH=/app/apps/server/.venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
